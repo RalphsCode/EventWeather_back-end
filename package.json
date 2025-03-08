@@ -1,0 +1,11 @@
+{
+  "name": "event_weather_api_backend",
+  "version": "1.0.0",
+  "description": "The backend server for the Event Weather App",
+  "main": "app.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "RalphsCode",
+  "license": "ISC"
+}
