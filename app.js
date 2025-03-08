@@ -1,12 +1,42 @@
+require('dotenv').config();
 const express = require('express');
+const axios = require('axios');
+const cors = require('cors'); 
 const app = express();
+
+// Enable CORS for all routes
+app.use(cors());
 
 app.get('/api/google', async function (req, res){
     try {
         const location = req.query.input;
-        return res.send('On the server, received this location to search:', location)
+        if (!location) {
+            return res.status(400).json({ error: "Missing Location" });
+          }
+          
+          const keyString = process.env.REACT_APP_GOOGLE_KEY;
+          if (!keyString) {
+            return res.status(500).json({ error: "API key not configured" });
+        }
+
+          const response = await axios.get(
+            `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${location}&key=${keyString}`
+          );
+          
+          const result = response.data.results[0];
+          const locationData =  {
+                    location: result.name,
+                    formattedAddress: result.formatted_address,
+                    lat: result.geometry.location.lat,
+                    lng: result.geometry.location.lng
+                };
+
+          // Return the response data to the client
+          return res.json(locationData);
+
     } catch (err) {
         console.log("Error:", err);
+        return res.status(500).send("Server error");
     }
 
 })  // END route
