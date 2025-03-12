@@ -47,6 +47,48 @@ app.get('/api/google', async function (req, res){
 })  // END route
 
 
+
+// FCC FIPS Route
+app.get('/api/fips', async function (req, res){
+  
+  // Get the location FIPS code from the FCC website
+    try {
+      const {lat, lng} = req.query;
+        const response = await axios.get(`https://geo.fcc.gov/api/census/block/find?format=json&latitude=${lat}&longitude=${lng}&showall=true`);
+        const FIPS = response.data.County.FIPS;
+        console.log("FIPS returned from API call:", FIPS);
+        return res.send(FIPS);
+
+    } catch (err) {
+        console.log("Error in FIPS API data retrieval:", err);
+        // Use a default FIPS for continuation: 06075 (San Francisco) or 06073 or 29510 (St. Louis)
+        return res.send('06075');
+    }
+})   // END Fips Route
+
+
+// NOAA NCDC WX Route
+app.get('/api/noaa', async function (req, res){
+
+  // Get the NOAA weather history for a single day
+  try {
+    const {date, FIPS} = req.query;
+      const noaaToken = process.env.NOAA_token;
+      const response = await axios.get(`https://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=GHCND&startdate=${date}&enddate=${date}&datatypeid=PRCP,TAVG&units=standard&limit=1000&locationid=FIPS:${FIPS}&includeStationLocation=True`,  {
+          headers: {
+              'token': noaaToken
+          }
+      });
+      const pointWX = response.data;
+      console.log("pointWX:", pointWX);
+      res.send(pointWX);
+  } catch (err) {
+      console.log("Error in NCDC NOAA API data retrieval:", err);
+  }
+})  // END NOAA Route
+
+
+
 // Start a server
 app.listen(3001, function(){
     console.log("Server is running on port: 3001")
