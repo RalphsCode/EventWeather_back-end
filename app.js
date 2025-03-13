@@ -79,7 +79,7 @@ app.get('/api/noaa', async function (req, res){
               'token': noaaToken
           }
       });
-      const pointWX = response.data;
+      const pointWX = response.data.results;
       console.log("pointWX:", pointWX);
       res.send(pointWX);
   } catch (err) {
