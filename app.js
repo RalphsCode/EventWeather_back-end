@@ -80,7 +80,6 @@ app.get('/api/noaa', async function (req, res){
           }
       });
       const pointWX = response.data.results;
-      console.log("pointWX:", pointWX);
       return res.json(pointWX);
   } catch (err) {
       console.log("Error in NCDC NOAA API data retrieval:", err);
