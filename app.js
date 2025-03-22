@@ -56,15 +56,15 @@ app.get('/api/fips', async function (req, res){
       const {lat, lng} = req.query;
         const response = await axios.get(`https://geo.fcc.gov/api/census/block/find?format=json&latitude=${lat}&longitude=${lng}&showall=true`);
         const FIPS = response.data.County.FIPS;
-        console.log("FIPS returned from API call:", FIPS);
         return res.send(FIPS);
 
     } catch (err) {
         console.log("Error in FIPS API data retrieval:", err);
         // Use a default FIPS for continuation: 06075 (San Francisco) or 06073 or 29510 (St. Louis)
         return res.send('06075');
-    }
+    };
 })   // END Fips Route
+
 
 
 // NOAA NCDC WX Route
