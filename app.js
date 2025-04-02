@@ -67,6 +67,25 @@ app.get('/api/fips', async function (req, res){
 
 
 
+// Solunar Route (https://sunrisesunset.io/api/)
+app.get('/api/solunar', async function (req, res){
+  
+  // Get the Sunrise and Sunset times 
+    try {
+      const {lat, lng} = req.query;
+        const response = await axios.get(`https://api.sunrisesunset.io/json?lat=${lat}&lng=${lng}`);
+        const sunrise = response.data.results.sunrise;
+        const sunset = response.data.results.sunset;
+        const solunar = {"sunrise":sunrise,"sunset":sunset};
+        return res.json(solunar);
+
+    } catch (err) {
+        console.log("Error in the Sunrise/Sunset API data retrieval:", err);
+        return res.send('12:00');
+    };
+})   // END solunar Route
+
+
 // NOAA NCDC WX Route
 app.get('/api/noaa', async function (req, res){
 
