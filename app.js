@@ -3,9 +3,13 @@ const express = require('express');     // npm i express
 const axios = require('axios');         // npm i axios
 const cors = require('cors');           // npm i cors
 const app = express();
+const db = require('./db');
 
 // Enable CORS for all routes
 app.use(cors());
+
+// Add Express JSON body parser middleware to parse the incoming JSON data
+app.use(express.json());
 
 // Google Maps Route
 app.get('/api/google', async function (req, res){
@@ -72,8 +76,8 @@ app.get('/api/solunar', async function (req, res){
   
   // Get the Sunrise and Sunset times 
     try {
-      const {lat, lng} = req.query;
-        const response = await axios.get(`https://api.sunrisesunset.io/json?lat=${lat}&lng=${lng}`);
+      const {lat, lng, date} = req.query;
+        const response = await axios.get(`https://api.sunrisesunset.io/json?lat=${lat}&lng=${lng}&date=${date}`);
         const sunrise = response.data.results.sunrise;
         const sunset = response.data.results.sunset;
         const solunar = {"sunrise":sunrise,"sunset":sunset};
@@ -105,6 +109,38 @@ app.get('/api/noaa', async function (req, res){
   }
 })  // END NOAA Route
 
+// Write a User to the user table in DB
+app.post('/api/user', async function (req, res) {
+  try { 
+    const { username, f_name, l_name, user_email, user_pword } = req.body; 
+    const result = await db.query( 
+    `INSERT INTO users (username, f_name, l_name, user_email, user_pword) 
+    VALUES ($1, $2, $3, $4, $5) 
+    RETURNING user_id`,	// Return data will be in rows
+    [username, f_name, l_name, user_email, user_pword] 
+  ); 	// the parameters $1, $2, $3
+    return res.json(result.rows[0]); 	// return only first row
+    } catch (err) { 
+      res.status(400).json({ error: err.message }); 
+  }
+})    // END User post Route
+
+// Write search to searches table in DB
+app.post('/api/search', async function (req, res) {
+  try { 
+    const { user_id, ip_addr, evt_location_ent, evt_location_act, evt_date, event, num_years, fips, data_pts_per_yr, all_tavg, all_prcp, prediction } = req.body; 
+    const result = await db.query( 
+    `INSERT INTO users (username, f_name, l_name, user_email, user_pword) 
+    VALUES ($1, $2, $3, $4, $5) 
+    RETURNING user_id`,	// Return data will be in rows
+    [username, f_name, l_name, user_email, user_pword] 
+  ); 	// the parameters $1, $2, $3
+    return res.json(result.rows[0]); 	// return only first row
+    } catch (err) { 
+      res.status(400).json({ error: err.message }); 
+  }
+
+})    // END search post Route
 
 
 // Start a server
