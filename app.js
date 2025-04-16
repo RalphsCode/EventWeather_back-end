@@ -53,7 +53,7 @@ app.get('/api/google', async function (req, res){
 
 
 // FCC FIPS Route
-app.get('/api/fips', async function (req, res){
+app.get('/api/ZipRef', async function (req, res){
   
   // Get the location FIPS code from the FCC website
     try {
@@ -95,9 +95,9 @@ app.get('/api/noaa', async function (req, res){
 
   // Get the NOAA weather history for a single day
   try {
-    const {date, FIPS} = req.query;
+    const {date, ZipRef} = req.query;
       const noaaToken = process.env.NOAA_token;
-      const response = await axios.get(`https://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=GHCND&startdate=${date}&enddate=${date}&datatypeid=PRCP,TAVG&units=standard&limit=1000&locationid=FIPS:${FIPS}&includeStationLocation=True`,  {
+      const response = await axios.get(`https://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=GHCND&startdate=${date}&enddate=${date}&datatypeid=PRCP,TAVG&units=standard&limit=1000&locationid=FIPS:${ZipRef}&includeStationLocation=True`,  {
           headers: {
               'token': noaaToken
           }
@@ -108,6 +108,7 @@ app.get('/api/noaa', async function (req, res){
       console.log("Error in NCDC NOAA API data retrieval:", err);
   }
 })  // END NOAA Route
+
 
 // Write a User to the user table in DB
 app.post('/api/user', async function (req, res) {
@@ -125,25 +126,64 @@ app.post('/api/user', async function (req, res) {
   }
 })    // END User post Route
 
-// Write search to searches table in DB
+
+// Write search to searches table, & wx_data table, in DB
 app.post('/api/search', async function (req, res) {
   try { 
-    const { user_id, ip_addr, evt_location_ent, evt_location_act, evt_date, event, num_years, fips, data_pts_per_yr, all_tavg, all_prcp, prediction } = req.body; 
-    const result = await db.query( 
-    `INSERT INTO users (username, f_name, l_name, user_email, user_pword) 
-    VALUES ($1, $2, $3, $4, $5) 
-    RETURNING user_id`,	// Return data will be in rows
-    [username, f_name, l_name, user_email, user_pword] 
-  ); 	// the parameters $1, $2, $3
-    return res.json(result.rows[0]); 	// return only first row
-    } catch (err) { 
-      res.status(400).json({ error: err.message }); 
+    const { 
+      user_id, evt_location_ent, evt_location_act, 
+      evt_date, evt_desc, num_years, ZipRef, rain_prcnt, exp_temp, max_temp, min_temp, sunrise, sunset,
+      // Weather data parameters
+      weatherResults 
+    } = req.body; 
+    const ip_addr = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    
+    // First, insert user, event, & prediction data
+    const searchResult = await db.query( 
+      `INSERT INTO searches (user_id, ip_addr, evt_location_ent, evt_location_act, evt_date, evt_desc, num_years, ZipRef, rain_prcnt, exp_temp, max_temp, min_temp, sunrise, sunset) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) 
+      RETURNING search_id`,
+      [user_id, ip_addr, evt_location_ent, evt_location_act, evt_date, evt_desc, num_years, ZipRef, rain_prcnt, exp_temp, max_temp, min_temp, sunrise, sunset]
+    );
+    
+    // Create the search_id value to use in weather data
+    const search_id = searchResult.rows[0].search_id;
+    
+    // Loop through the weather resutls
+    // First loop over the array of daily objects
+    // Then extract the daily object & write to DB
+    for (const daily_data of weatherResults) {
+        const wx_date = Object.keys(daily_data)[0];
+
+        const values = daily_data[wx_date];
+        const record_count = values.records;
+        const rain = values.rain;
+        const temp = values.temp;
+        const max_temp = values.maxTemp;
+        const min_temp = values.minTemp;
+      
+        // Send the weather data to the database
+        const weatherResult = await db.query(
+          `INSERT INTO wx_data (search_id, wx_date, record_count, prcp, tavg, tmax, tmin) 
+          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [search_id, wx_date, record_count, rain, temp, max_temp, min_temp]
+        );
+    }  // END for loop...
+    
+    // Return the search_id
+    return res.status(200).json({search_id: search_id });
+  } catch (err) { 
+    console.error(err);
+    res.status(400).json({ error: err.message }); 
   }
+});  // END data post Route
 
-})    // END search post Route
 
+// *****************************************************
 
 // Start a server
 app.listen(3001, function(){
     console.log("Server is running on port: 3001")
 })
+
+// *****************************************************
