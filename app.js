@@ -1,3 +1,20 @@
+/** Backend for the EVENT WEATHER app.
+ * Starts a SERVER.
+ * Contains RESTful API routes for:
+ *  /api/google - Google Maps for location info
+ *      returns the location data
+ *  /api/ZipRef - FCC for ZipRef code
+ *      returns the 5 digit ZipRef code for the location.
+ *  /api/solunar - sunrisesunset.io for Sunrise & Sunset
+ *      returns the Sunrise and Sunset times for the location.
+ *  /api/noaa - NOAA for daily weather history data
+ *      returns the weather history for a ZipRef for a particular day.
+ *  /api/user - writes a user profile to the users table in the DB
+ *      returns user_id from users table.
+ *  /api/search - Write search info to searches table, & wx_data table in DB
+ *      returns the search_id from searches table.
+ */
+
 require('dotenv').config();
 const express = require('express');     // npm i express
 const axios = require('axios');         // npm i axios
@@ -52,22 +69,22 @@ app.get('/api/google', async function (req, res){
 
 
 
-// FCC FIPS Route
+// FCC ZipRef Route
 app.get('/api/ZipRef', async function (req, res){
   
-  // Get the location FIPS code from the FCC website
+  // Get the location ZipRef code from the FCC website
     try {
       const {lat, lng} = req.query;
         const response = await axios.get(`https://geo.fcc.gov/api/census/block/find?format=json&latitude=${lat}&longitude=${lng}&showall=true`);
-        const FIPS = response.data.County.FIPS;
-        return res.send(FIPS);
+        const ZipRef = response.data.County.FIPS;
+        return res.send(ZipRef);
 
     } catch (err) {
-        console.log("Error in FIPS API data retrieval:", err);
-        // Use a default FIPS for continuation: 06075 (San Francisco) or 06073 or 29510 (St. Louis)
+        console.log("Error in ZipRef API data retrieval:", err);
+        // Use a default ZipRef for continuation: 06075 (San Francisco) or 06073 or 29510 (St. Louis)
         return res.send('06075');
     };
-})   // END Fips Route
+})   // END ZipRef Route
 
 
 
