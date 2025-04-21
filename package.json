@@ -4,7 +4,9 @@
   "description": "The backend server for the Event Weather App",
   "main": "app.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "author": "RalphsCode",
   "license": "ISC",

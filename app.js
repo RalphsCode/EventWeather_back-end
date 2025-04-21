@@ -195,12 +195,5 @@ app.post('/api/search', async function (req, res) {
   }
 });  // END data post Route
 
+module.exports = app;
 
-// *****************************************************
-
-// Start a server
-app.listen(3001, function(){
-    console.log("Server is running on port: 3001")
-})
-
-// *****************************************************
