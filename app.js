@@ -193,7 +193,37 @@ app.post('/api/search', async function (req, res) {
     console.error(err);
     res.status(400).json({ error: err.message }); 
   }
-});  // END data post Route
+});  // END data POSt Route
+
+app.get('/api/history', async function (req, res) {
+  try {
+    const user_id = req.query.user_id;
+    if (!user_id) {
+      return res.status(401).json({error: "User must be logged in."});
+    } // END if...
+    const results = await db.query(
+      `SELECT 
+        evt_location_act, 
+        evt_date, 
+        num_years,  
+        rain_prcnt,
+        exp_temp,
+        max_temp,
+        min_temp,
+        sunrise,
+        sunset 
+      FROM searches 
+      WHERE user_id = $1
+      ORDER BY date_time_utc DESC
+      LIMIT 5;
+      `, [user_id]
+    );
+    return res.status(200).json(results.rows);
+  } catch (err) {
+    console.log("ERROR in getting the search history data:", err);
+    return res.status(500).json({error: "Server error retrieving history"});
+  }
+})  // END history GET Route
 
 module.exports = app;
 

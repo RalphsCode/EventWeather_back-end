@@ -1,3 +1,5 @@
+// File that creates & starts a local server for the Aoo.
+
 const app = require('./app');     // npm i express
 
 // Start a server
