@@ -90,13 +90,40 @@ app.get('/api/ZipRef', async function (req, res){
 
 // Solunar Route (https://sunrisesunset.io/api/)
 app.get('/api/solunar', async function (req, res){
+
+  function removeSeconds(timeString) {
+    // Check if the input is a string.
+    if (typeof timeString !== 'string') {
+      return null;
+    }
+  
+    // Use a regular expression to match the time format.
+    const timeRegex = /^(\d{1,2}:\d{2}):\d{2} (AM|PM)$/i;
+  
+    // Test if the timeString matches the expected format.
+    const match = timeString.match(timeRegex);
+  
+    if (!match) {
+      return null; // Return null for invalid format
+    }
+  
+    // Extract the hours and minutes from the first capturing group.
+    const hoursAndMinutes = match[1];
+    const ampm = match[2].toUpperCase(); // Ensure AM/PM is uppercase
+  
+    return `${hoursAndMinutes} ${ampm}`;
+  } // END removeSeconds
   
   // Get the Sunrise and Sunset times 
     try {
       const {lat, lng, date} = req.query;
         const response = await axios.get(`https://api.sunrisesunset.io/json?lat=${lat}&lng=${lng}&date=${date}`);
-        const sunrise = response.data.results.sunrise;
-        const sunset = response.data.results.sunset;
+        // Format the times to remove the seconds units from the time string
+        const sunriseFullTime = response.data.results.sunrise;
+        const sunsetFullTime = response.data.results.sunset;
+        const sunrise = removeSeconds(sunriseFullTime);
+        const sunset = removeSeconds(sunsetFullTime);
+        
         const solunar = {"sunrise":sunrise,"sunset":sunset};
         return res.json(solunar);
 
