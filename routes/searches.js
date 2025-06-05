@@ -23,7 +23,7 @@ router.post('/', async function (req, res) {
       const searchResult = await db.query( 
         `INSERT INTO searches (user_id, ip_addr, evt_location_ent, evt_location_act, evt_date, evt_desc, num_years, ZipRef, rain_prcnt, exp_temp, max_temp, min_temp, sunrise, sunset) 
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) 
-        RETURNING search_id`,
+        RETURNING search_id;`,
         [user_id, ip_addr, evt_location_ent, evt_location_act, evt_date, evt_desc, num_years, ZipRef, rain_prcnt, exp_temp, max_temp, min_temp, sunrise, sunset]
       );
       
