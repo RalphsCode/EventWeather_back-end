@@ -7,6 +7,11 @@ const db = require('../db');
 router.post('/register', async (req, res, next) => {
     try {
         const {username, email, password} = req.body;
+        // Check that all three fields have been provided and are not whitespace
+        if (!username?.trim() || !email?.trim() || !password?.trim()) {
+            return res.status(400).json({ error: "Username, email, and password are required" });
+        }
+
         //Check if the username is available
         const checkUsername = await db.query( 
         `SELECT * FROM users
