@@ -45,4 +45,42 @@ router.post('/register', async (req, res, next) => {
     }
 })
 
+
+router.post('/login', async (req, res, next) => {
+    try {
+        const {username, password} = req.body;
+        // Check that all three fields have been provided and are not whitespace
+        if (!email?.trim() || !password?.trim()) {
+            return res.status(400).json({ error: "email, and password are required" });
+        }
+
+        //Check if the username is valid
+        const checkUsername = await db.query( 
+        `SELECT * FROM users
+        WHERE username = $1;`, [username]
+        );
+        const usernameResult = checkUsername.rows[0];
+        if (usernameResult) {
+            return res.status(400).json({username: "NOT FOUND" });
+        }
+
+        // Hash the password
+        const hashedPW = await bcrypt.hash(password, 12);
+
+        // Verify the email, and hashed pw with the database
+        const writeUserToDB = await db.query( 
+            // Need to check the hashed password here.
+            // And if valid return a token or just the username to the frontend.
+        )
+
+    } catch(e) {
+        console.error("Error logging in:", e); 
+        // Log the error for debugging
+        res.status(500).json({
+            success: false,
+            message: `ERROR logging in user: ${e.message || e}`
+        });
+    }
+})
+
 module.exports = router;
